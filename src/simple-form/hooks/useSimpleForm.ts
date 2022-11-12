@@ -1,69 +1,72 @@
-import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
-import { z, ZodRawShape } from "zod";
-import { ObservedObject, useObserver } from "./useObserver";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
+import { z, ZodRawShape, ZodSchema } from "zod";
+import { ObservableObject, useObserver } from "./useObserver";
 
 interface UseFormArgs<T> {
   defaultValues: T;
   schema: (zod: typeof z) => ZodRawShape;
 }
 
-export const useForm = <T>({
-  defaultValues,
-  schema,
-}: UseFormArgs<T>) => {
-  const [isFormValid, setIsFormValid] = useState(false);
-  const [formValues, setFormValues] = useState<T>(defaultValues);
+const validateForm = <T, >(schema: ZodSchema, object: T) => {
+  const { success } = schema.safeParse(object);
 
-  const formRef = useRef<T>(defaultValues);
+  return success;
+};
+
+export const useSimpleForm = <T>({ defaultValues, schema }: UseFormArgs<T>) => {
+  const [isFormValid, setIsFormValid] = useState(false);
+  const [, forceRerender] = useState(Date.now());
+
   const formSchema = z.object(schema(z));
 
   useEffect(() => {
-    const { success } = formSchema.safeParse(defaultValues);
-    setIsFormValid(success);
-  }, [])
+    const isValid = validateForm(formSchema, defaultValues);
+    setIsFormValid(isValid);
+  }, []);
 
-
-  const formData = useObserver<T>(formRef.current as ObservedObject<T>, ({ target }) => {
-      const { success } = formSchema.safeParse(target);
-      console.log(success, target);
-      setIsFormValid(success);
+  const formValues = useObserver<T>(
+    defaultValues as ObservableObject<T>,
+    ({ target }) => {
+      const isValid = validateForm(formSchema, target);
+      setIsFormValid(isValid);
 
       return true;
-  });
-
-  const onChange = useCallback((e: ChangeEvent<any>) => {
-    formData[e.target.name as keyof T] = e.target.value
-  }, []);
-
-  const ref = useCallback((element: any) => {
-    if (element !== null) {
-      element.value = formRef.current[element.name as keyof T] ?? ""
     }
-  }, []);
+  );
+
+  const onChange = (e: ChangeEvent<any>) => {
+    formValues[e.target.name as keyof T] = e.target.value;
+  };
+
+  const ref = (element: any) => {
+    if (element !== null) {
+      element.value = formValues[element.name as keyof T] ?? "";
+    }
+  };
 
   const register = (name: keyof T) => {
     return {
-      onChange: (e: ChangeEvent<any>) => formData[name as keyof T] = e.target.value,
+      onChange: (e: ChangeEvent<any>) =>
+        (formValues[name as keyof T] = e.target.value),
       ref: (element: any) => {
         if (element !== null) {
-          element.value = formValues?.[name as keyof T] ?? ""
+          element.value = formValues[name as keyof T] ?? "";
         }
-      }
+      },
     };
   };
 
-
-  const setValue = (name: keyof T, value: string) => {
-    setFormValues((prevValues) => ({...prevValues, [name]: value}))
-  }
+  const setField = (name: keyof T, value: string) => {
+    formValues[name] = value;
+    forceRerender(Date.now());
+  };
 
   return {
     register,
     isFormValid,
-    formData,
-    onChange, 
+    formValues,
+    onChange,
     ref,
-    setValue,
+    setField,
   };
 };
-

@@ -1,5 +1,5 @@
-import { FormControl, Input, Button, TextField } from "@mui/material";
-import { useForm } from "./simple-form/hooks";
+import { FormControl, Button, TextField } from "@mui/material";
+import { useSimpleForm } from "./simple-form/hooks";
 
 interface User {
   name: string;
@@ -7,26 +7,35 @@ interface User {
 }
 
 export const MaterialExample = () => {
-  const { isFormValid, formData, ref, onChange } = useForm<User>({
-    defaultValues: {
-      name: "John",
-      lastName: "Doe",
-    },
-    schema: (z) => ({
-      name: z.string().min(2).max(5),
-      lastName: z.string().min(2).max(7),
-    }),
-  });
+  const { isFormValid, formValues, ref, onChange, setField } =
+    useSimpleForm<User>({
+      defaultValues: {
+        name: "Default Name",
+        lastName: "Default Last Name",
+      },
+      schema: (z) => ({
+        name: z.string().min(2).max(5),
+        lastName: z.string().min(2).max(7),
+      }),
+    });
+
+  const reset = () => {
+    setField("name", "");
+    setField("lastName", "");
+  };
+
   return (
-    <FormControl
-      onSubmit={(e) => {
-        e.preventDefault();
-        console.log(formData);
-      }}
-    >
-      <TextField name="name" inputRef={ref} onChange={onChange} />
-      <TextField name="lastName" inputRef={ref} onChange={onChange} />
-      <Button type="submit" disabled={!isFormValid} onClick={() => console.log(formData)}>Submit</Button>
+    <FormControl>
+      <TextField name="name" ref={ref} inputRef={ref} onChange={onChange} />
+      <TextField name="lastName" ref={ref} inputRef={ref} onChange={onChange} />
+      <Button
+        type="submit"
+        disabled={!isFormValid}
+        onClick={() => console.log(formValues)}
+      >
+        Submit
+      </Button>
+      <Button onClick={() => reset()}>Reset</Button>
     </FormControl>
   );
 };

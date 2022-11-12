@@ -1,4 +1,4 @@
-import { useForm } from "./simple-form/hooks";
+import { useSimpleForm } from "./simple-form/hooks";
 
 import { Form } from "./Form";
 import { MaterialExample } from "./MaterialExample";

@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-export type ObservedObject<T> = Record<keyof T, string>;
+export type ObservableObject<T> = Record<keyof T, string>;
 type Callback<T> = ({
   value,
   prop,
@@ -8,14 +8,14 @@ type Callback<T> = ({
 }: {
   value: string;
   prop: keyof T;
-  target: ObservedObject<T>;
+  target: ObservableObject<T>;
 }) => boolean;
 
 export const useObserver = <T>(
-  object: ObservedObject<T>,
+  object: ObservableObject<T>,
   callback: Callback<T>
 ) => {
-  const handlers: ProxyHandler<ObservedObject<T>> = {
+  const handlers: ProxyHandler<ObservableObject<T>> = {
     set(target, prop, value) {
       target[prop as keyof T] = value;
       return callback({ value, prop: prop as keyof T, target });

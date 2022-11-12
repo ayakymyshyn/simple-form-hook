@@ -1,9 +1,7 @@
-import { useForm } from "./simple-form/hooks";
-
-import "./App.css";
+import { useSimpleForm } from "./simple-form/hooks";
 
 export function Form() {
-  const { isFormValid, formData, register } = useForm({
+  const { isFormValid, formValues, register, setField } = useSimpleForm({
     schema: (z) => ({
       name: z.string().min(2).max(5),
       lastName: z.string().min(2).max(7),
@@ -14,12 +12,17 @@ export function Form() {
     },
   });
 
+  const reset = () => {
+    setField('name', '');
+    setField('lastName', '');
+  }
+
   return (
     <div className="App">
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          console.log(formData);
+          console.log(formValues);
         }}
       >
         <div>
@@ -32,7 +35,7 @@ export function Form() {
           Submit
         </button>
       </form>
+      <button onClick={() => reset()}>reset</button>
     </div>
   );
 }
-
